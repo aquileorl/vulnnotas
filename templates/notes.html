@@ -6,8 +6,8 @@
   <button>Buscar</button>
 </form>
 {% if q %}
-  <!-- A03: XSS reflejado INTENCIONADO (|safe sobre entrada del usuario) -->
-  <p>Resultados para: <em>{{ q|safe }}</em></p>
+  <!-- CORRECCION (fix): sin |safe -> Jinja2 escapa la entrada -> XSS reflejado neutralizado -->
+  <p>Resultados para: <em>{{ q }}</em></p>
 {% endif %}
 {% for n in notes %}
   <div class="note">
