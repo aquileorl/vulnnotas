@@ -45,6 +45,22 @@ def close_db(exc):
         db.close()
 
 
+@app.after_request
+def set_security_headers(resp):
+    # BLOQUE III (§6.2): cabeceras de seguridad HTTP (defensa en profundidad).
+    resp.headers["X-Frame-Options"] = "DENY"                    # anti-clickjacking
+    resp.headers["X-Content-Type-Options"] = "nosniff"          # evita MIME sniffing
+    resp.headers["Content-Security-Policy"] = (                 # mitiga XSS (bloquea scripts inline)
+        "default-src 'self'; script-src 'self'; "
+        "style-src 'self' 'unsafe-inline'; object-src 'none'; frame-ancestors 'none'"
+    )
+    resp.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"  # fuerza HTTPS
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    resp.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    resp.headers["Cache-Control"] = "no-store"                  # no cachear contenido sensible
+    return resp
+
+
 def init_db():
     db = sqlite3.connect(DB_PATH)
     cur = db.cursor()
