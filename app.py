@@ -20,14 +20,10 @@ import subprocess
 from flask import (Flask, request, session, redirect, url_for,
                    render_template, g, jsonify)
 
-# --- A02: Cryptographic Failures / secretos hardcodeados (INTENCIONADO) ---
-SECRET_KEY = "s3cr3t-flask-key-hardcoded-tfg-2026"          # secreto de sesion en el codigo
-AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"                   # credencial (falsa) hardcodeada
-AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-DB_ADMIN_PASSWORD = "SuperAdmin123!"                         # password hardcodeada
-# Token interno hardcodeado (INTENCIONADO): alta entropia -> lo detecta el escaner de
-# secretos (Gitleaks, regla generic-api-key). Caso real de fuga de credencial (CWE-798).
-INTERNAL_API_TOKEN = "Zx9Kq2Pm7Rt4Nv1Wb8Yc3Fh6Jd0Lg5Sa2Ue4Io7Q"
+# CORRECCION (fix) A02: los secretos se leen de VARIABLES DE ENTORNO, nunca en el codigo.
+# El valor real se define fuera del repo (config del servidor / gestor de secretos / .env
+# ignorado por git). En desarrollo, si no hay SECRET_KEY se genera una aleatoria.
+SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24).hex()
 DB_PATH = os.environ.get("VULNNOTAS_DB", "vulnnotas.db")
 
 app = Flask(__name__)
