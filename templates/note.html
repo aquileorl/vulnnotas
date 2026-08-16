@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block body %}
+<p><a href="{{ url_for('notes') }}">&larr; volver</a></p>
+<h2>{{ note['title'] }}</h2>
+<p style="color:#888">Propietario: {{ note['owner'] }} · Nota #{{ note['id'] }}</p>
+<!-- A03: XSS almacenado INTENCIONADO (|safe sobre el cuerpo de la nota) -->
+<div class="note">{{ note['body']|safe }}</div>
+{% endblock %}

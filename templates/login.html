@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Iniciar sesion</h2>
+{% if error %}<p class="err">{{ error }}</p>{% endif %}
+<form method="post">
+  <p>Usuario: <input name="username" autofocus></p>
+  <p>Contrasena: <input name="password" type="password"></p>
+  <button type="submit">Entrar</button>
+</form>
+<p style="color:#888;font-size:12px">Usuarios de prueba: emilio/flask2026 · guest/guest</p>
+{% endblock %}

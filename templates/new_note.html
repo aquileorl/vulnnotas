@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Nueva nota</h2>
+<form method="post">
+  <p>Titulo: <input name="title" size="40"></p>
+  <p>Cuerpo:<br><textarea name="body" rows="6" cols="50"></textarea></p>
+  <button type="submit">Guardar</button>
+</form>
+{% endblock %}

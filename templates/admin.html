@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Panel de administracion</h2>
+<!-- A01: esta pagina NO comprueba el rol; cualquier usuario autenticado la ve (INTENCIONADO) -->
+<p style="color:#b00">Usuarios y contrasenas (en texto plano):</p>
+<table border="1" cellpadding="4">
+  <tr><th>Usuario</th><th>Contrasena</th><th>Rol</th></tr>
+  {% for u in users %}
+  <tr><td>{{ u['username'] }}</td><td>{{ u['password'] }}</td><td>{{ u['role'] }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

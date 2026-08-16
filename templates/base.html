@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>VulnNotas{% block title %}{% endblock %}</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 760px; margin: 24px auto; color:#222; }
+    header { border-bottom: 2px solid #234; padding-bottom: 8px; margin-bottom: 16px; }
+    a { color: #1155aa; }
+    .note { border:1px solid #ccc; padding:8px 12px; margin:8px 0; border-radius:4px; }
+    input, textarea { padding:4px; }
+    .err { color:#b00; }
+    nav a { margin-right: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>VulnNotas</strong> — intranet de notas (LAB TFG)
+    {% if session.get('user') %}
+      <nav style="float:right">
+        <a href="{{ url_for('notes') }}">Mis notas</a>
+        <a href="{{ url_for('new_note') }}">Nueva</a>
+        <a href="{{ url_for('admin') }}">Admin</a>
+        <a href="{{ url_for('logout') }}">Salir ({{ session.get('user') }})</a>
+      </nav>
+    {% endif %}
+  </header>
+  {% block body %}{% endblock %}
+</body>
+</html>

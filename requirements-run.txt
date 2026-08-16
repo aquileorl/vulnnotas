@@ -1,0 +1,4 @@
+# Dependencias para EJECUTAR la app en local (versiones actuales, compatibles con Python 3.14).
+# El requirements.txt (versiones viejas) es a proposito para el escaner SCA y el Docker del pipeline.
+Flask
+# PyYAML  # opcional: solo si quieres probar el endpoint /import (deserializacion)

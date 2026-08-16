@@ -1,0 +1,98 @@
+name: DevSecOps Pipeline
+
+# Pipeline CI/CD con 5 etapas de seguridad (TFG Bloque II - guia 5.4):
+#   1) SAST            -> Semgrep + Bandit
+#   2) SCA             -> pip-audit (dependencias vulnerables)
+#   3) Secretos        -> Gitleaks
+#   4) Imagen Docker   -> Trivy
+#   5) DAST            -> OWASP ZAP baseline scan
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sast:
+    name: 1. SAST (Semgrep + Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar herramientas
+        run: pip install semgrep bandit
+      - name: Semgrep (OWASP Top Ten + Python)
+        run: semgrep --config=p/owasp-top-ten --config=p/python . --sarif --output semgrep.sarif || true
+      - name: Semgrep (salida legible)
+        run: semgrep --config=p/owasp-top-ten --config=p/python .
+      - name: Bandit
+        run: bandit -r . -x ./.venv || true
+      - name: Guardar informe SAST
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-semgrep
+          path: semgrep.sarif
+
+  sca:
+    name: 2. SCA (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar pip-audit
+        run: pip install pip-audit
+      - name: Auditar dependencias (requirements.txt)
+        run: pip-audit -r requirements.txt --desc || true
+
+  secrets:
+    name: 3. Secretos (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  container:
+    name: 4. Imagen Docker (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir imagen
+        run: docker build -t vulnnotas:ci .
+      - name: Escanear imagen con Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: vulnnotas:ci
+          format: table
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          exit-code: '0'
+
+  dast:
+    name: 5. DAST (OWASP ZAP baseline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Levantar la app
+        run: |
+          docker build -t vulnnotas:ci .
+          docker run -d -p 5000:5000 --name vulnnotas vulnnotas:ci
+          sleep 8
+          curl -sf http://localhost:5000/login >/dev/null && echo "app arriba"
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:5000'
+          cmd_options: '-a'
+          fail_action: false
+          allow_issue_writing: false

@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.db
+.venv/
+venv/
+.env
+zap_report.*
+semgrep.json
+bandit.json

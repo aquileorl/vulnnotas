@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Mis notas</h2>
+<form method="get" action="{{ url_for('notes') }}">
+  <input name="q" placeholder="buscar por titulo" value="{{ q }}">
+  <button>Buscar</button>
+</form>
+{% if q %}
+  <!-- A03: XSS reflejado INTENCIONADO (|safe sobre entrada del usuario) -->
+  <p>Resultados para: <em>{{ q|safe }}</em></p>
+{% endif %}
+{% for n in notes %}
+  <div class="note">
+    <a href="{{ url_for('note', nid=n['id']) }}">#{{ n['id'] }} — {{ n['title'] }}</a>
+    <span style="color:#888"> (propietario: {{ n['owner'] }})</span>
+  </div>
+{% else %}
+  <p>No hay notas.</p>
+{% endfor %}
+{% endblock %}
