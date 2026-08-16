@@ -138,12 +138,14 @@ def notes():
 def note(nid):
     if "user" not in session:
         return redirect(url_for("login"))
-    # A01: IDOR - sigue sin comprobar propiedad (se corrige en la fix de control de acceso)
     # CORRECCION (fix) SQLi: id parametrizado
     row = get_db().execute("SELECT * FROM notes WHERE id = ?", (nid,)).fetchone()
     if not row:
         return "Nota no encontrada", 404
-    # body se renderiza con |safe -> A03 XSS almacenado (INTENCIONADO)
+    # BLOQUE III (§6.1): control de acceso a nivel de OBJETO (evita IDOR)
+    if row["owner"] != session["user"] and session.get("role") != "admin":
+        return ("<h2>403 - Acceso denegado</h2><p>Esta nota no te pertenece.</p>"
+                "<a href='/notes'>volver</a>"), 403
     return render_template("note.html", note=row)
 
 
@@ -165,7 +167,12 @@ def new_note():
 
 @app.route("/admin")
 def admin():
-    # A01: Broken Access Control - NO se comprueba el rol admin (INTENCIONADO)
+    if "user" not in session:
+        return redirect(url_for("login"))
+    # BLOQUE III (§6.1): control de acceso por ROL (minimo privilegio)
+    if session.get("role") != "admin":
+        return ("<h2>403 - Acceso denegado</h2><p>Se requiere rol de administrador.</p>"
+                "<a href='/notes'>volver</a>"), 403
     rows = get_db().execute("SELECT username, password, role FROM users").fetchall()
     return render_template("admin.html", users=rows)
 
