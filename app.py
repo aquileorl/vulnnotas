@@ -94,9 +94,10 @@ def login():
     if request.method == "POST":
         u = request.form.get("username", "")
         p = request.form.get("password", "")
-        # A03: SQL Injection - consulta construida por concatenacion (INTENCIONADO)
-        query = "SELECT * FROM users WHERE username = '%s' AND password = '%s'" % (u, p)
-        row = get_db().execute(query).fetchone()
+        # CORRECCION (fix): consulta PARAMETRIZADA -> los datos (?, ?) van separados del SQL,
+        # el driver nunca los interpreta como codigo -> SQL injection imposible.
+        query = "SELECT * FROM users WHERE username = ? AND password = ?"
+        row = get_db().execute(query, (u, p)).fetchone()
         if row:
             session["user"] = row["username"]
             session["role"] = row["role"]
@@ -111,13 +112,12 @@ def notes():
         return redirect(url_for("login"))
     q = request.args.get("q")
     if q is not None:
-        # A03: SQL Injection en la busqueda (INTENCIONADO)
-        sql = ("SELECT * FROM notes WHERE owner = '%s' AND title LIKE '%%%s%%'"
-               % (session["user"], q))
-        rows = get_db().execute(sql).fetchall()
+        # CORRECCION (fix): busqueda PARAMETRIZADA (el % del LIKE viaja en el dato, no en el SQL)
+        sql = "SELECT * FROM notes WHERE owner = ? AND title LIKE ?"
+        rows = get_db().execute(sql, (session["user"], "%" + q + "%")).fetchall()
     else:
         rows = get_db().execute(
-            "SELECT * FROM notes WHERE owner = '%s'" % session["user"]).fetchall()
+            "SELECT * FROM notes WHERE owner = ?", (session["user"],)).fetchall()
     # q se reflejara en la plantilla con |safe -> A03 XSS reflejado (INTENCIONADO)
     return render_template("notes.html", notes=rows, q=q or "")
 
@@ -126,9 +126,9 @@ def notes():
 def note(nid):
     if "user" not in session:
         return redirect(url_for("login"))
-    # A01: IDOR - se accede a cualquier nota sin comprobar propiedad (INTENCIONADO)
-    # A03: SQLi por formato de entero directo (INTENCIONADO)
-    row = get_db().execute("SELECT * FROM notes WHERE id = %d" % nid).fetchone()
+    # A01: IDOR - sigue sin comprobar propiedad (se corrige en la fix de control de acceso)
+    # CORRECCION (fix) SQLi: id parametrizado
+    row = get_db().execute("SELECT * FROM notes WHERE id = ?", (nid,)).fetchone()
     if not row:
         return "Nota no encontrada", 404
     # body se renderiza con |safe -> A03 XSS almacenado (INTENCIONADO)
@@ -142,10 +142,10 @@ def new_note():
     if request.method == "POST":
         title = request.form.get("title", "")
         body = request.form.get("body", "")
-        # A03: SQL Injection en el INSERT (INTENCIONADO)
+        # CORRECCION (fix): INSERT parametrizado
         get_db().execute(
-            "INSERT INTO notes (owner, title, body) VALUES ('%s', '%s', '%s')"
-            % (session["user"], title, body))
+            "INSERT INTO notes (owner, title, body) VALUES (?, ?, ?)",
+            (session["user"], title, body))
         get_db().commit()
         return redirect(url_for("notes"))
     return render_template("new_note.html")
