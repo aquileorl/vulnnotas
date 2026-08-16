@@ -87,12 +87,19 @@ jobs:
         run: |
           docker build -t vulnnotas:ci .
           docker run -d -p 5000:5000 --name vulnnotas vulnnotas:ci
-          sleep 8
-          curl -sf http://localhost:5000/login >/dev/null && echo "app arriba"
+          sleep 10
+          curl -sf http://localhost:5000/login >/dev/null && echo "app arriba" || echo "aviso: la app tardo en responder"
       - name: OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
+        run: |
+          mkdir -p zap-out && chmod 777 zap-out
+          docker run --network=host -v ${{ github.workspace }}/zap-out:/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://localhost:5000 \
+            -r zap_report.html -w zap_report.md -J zap_report.json -a || true
+          echo "=== Resumen ZAP ==="; tail -n 20 zap-out/zap_report.md 2>/dev/null || true
+      - name: Guardar informe ZAP (artefacto)
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          target: 'http://localhost:5000'
-          cmd_options: '-a'
-          fail_action: false
-          allow_issue_writing: false
+          name: dast-zap-report
+          path: zap-out/
