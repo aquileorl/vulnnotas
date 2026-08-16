@@ -25,6 +25,9 @@ SECRET_KEY = "s3cr3t-flask-key-hardcoded-tfg-2026"          # secreto de sesion 
 AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"                   # credencial (falsa) hardcodeada
 AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 DB_ADMIN_PASSWORD = "SuperAdmin123!"                         # password hardcodeada
+# Token interno hardcodeado (INTENCIONADO): alta entropia -> lo detecta el escaner de
+# secretos (Gitleaks, regla generic-api-key). Caso real de fuga de credencial (CWE-798).
+INTERNAL_API_TOKEN = "Zx9Kq2Pm7Rt4Nv1Wb8Yc3Fh6Jd0Lg5Sa2Ue4Io7Q"
 DB_PATH = os.environ.get("VULNNOTAS_DB", "vulnnotas.db")
 
 app = Flask(__name__)
